@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "suitesparse-sys-v[0-9]+.[0-9]+.[0-9]+"
+      - "suitesparse-v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Test & Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Test suitesparse-sys
+        if: startsWith(github.ref_name, 'suitesparse-sys-v')
+        run: cargo test -p suitesparse-sys --all-features
+
+      - name: Test suitesparse
+        if: startsWith(github.ref_name, 'suitesparse-v')
+        run: cargo test -p suitesparse --all-features
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true

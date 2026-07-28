@@ -1,7 +1,7 @@
 [package]
 name = "suitesparse-sys"
-version = "0.1.4"
-edition = "2021"
+version = "0.1.5"
+edition = "2024"
 description = "sys crate for suitesparse library"
 license = "MIT"
 authors = [

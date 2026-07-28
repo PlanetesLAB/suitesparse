@@ -36,7 +36,7 @@ use crate::{
 };
 
 #[cfg(feature = "klu")]
-extern "C" {
+unsafe extern "C" {
     pub fn klu_analyze(
         n: i32,
         Ap: *const i32,
