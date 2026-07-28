@@ -195,11 +195,7 @@ impl Library {
 fn build_vendor() -> Library {
     macro_rules! feature {
         ($s:tt) => {
-            if cfg!(feature = $s) {
-                "ON"
-            } else {
-                "OFF"
-            }
+            if cfg!(feature = $s) { "ON" } else { "OFF" }
         };
     }
 
