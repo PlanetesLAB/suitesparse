@@ -266,8 +266,17 @@ fn generate_bindings(suitesparse: &Library) -> Result<(), String> {
         .clang_args(lib_args)
         .generate_comments(false)
         .parse_callbacks(Box::new(IgnoreMacros::new()))
+        // These libc functions are pulled in through transitive C headers, but are
+        // not part of the SuiteSparse API.  On some targets bindgen emits
+        // signatures which trigger Rust's runtime-symbol-definition lint.
+        .blocklist_function("bcmp")
         .blocklist_function("klu_(l_)?analyze")
         .blocklist_function("klu_(l_)?(zl_)?(z_)?factor")
+        .blocklist_function("memcmp")
+        .blocklist_function("memcpy")
+        .blocklist_function("memmove")
+        .blocklist_function("memset")
+        .blocklist_function("strlen")
         .generate()
         .map_err(|e| e.to_string())?;
 
