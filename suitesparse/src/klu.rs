@@ -62,6 +62,28 @@ mod tests {
     }
 
     #[test]
+    fn refactors_new_values() {
+        let mut triplet = SparseTriplet::new();
+        for (row, col, value) in [(0, 0, 4.0), (1, 0, 1.0), (0, 1, 2.0), (1, 1, 3.0)] {
+            triplet.add(row, col, value);
+        }
+        let mut lu = KluLU::new();
+        let mut common = KluCommon::default();
+        assert_eq!(lu.refactor(&mut common), Err(KluError::NotFactorized));
+        lu.factorize(2, &triplet, &mut common).unwrap();
+        assert!(lu.rcond(&mut common).unwrap() > 0.0);
+
+        for value in lu.values_mut().unwrap() {
+            *value *= 2.0;
+        }
+        lu.refactor(&mut common).unwrap();
+        let mut solution = [0.0; 2];
+        lu.solve(&[12.0, 8.0], &mut solution, &mut common).unwrap();
+        assert!((solution[0] - 1.0).abs() < 1e-12);
+        assert!((solution[1] - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
     fn reports_singular_matrix() {
         let mut triplet = SparseTriplet::new();
         triplet.add(0, 0, 1.0);

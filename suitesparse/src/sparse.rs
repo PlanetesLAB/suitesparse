@@ -116,6 +116,11 @@ impl CscMatrix {
         &self.values
     }
 
+    #[cfg(feature = "klu")]
+    pub(crate) fn values_mut(&mut self) -> &mut [f64] {
+        &mut self.values
+    }
+
     pub(crate) fn raw_parts(&self) -> (*const i64, *const i64, *const f64) {
         (
             self.col_ptr.as_ptr(),

@@ -1,6 +1,6 @@
 use suitesparse_sys::{
     KLU_OK, klu_l_analyze, klu_l_factor, klu_l_free_numeric, klu_l_free_symbolic, klu_l_numeric,
-    klu_l_solve, klu_l_symbolic,
+    klu_l_rcond, klu_l_refactor, klu_l_solve, klu_l_symbolic,
 };
 
 use crate::sparse::{CscMatrix, SparseError, SparseTriplet};
@@ -73,6 +73,69 @@ impl KluLU {
             });
         }
         Ok(())
+    }
+
+    /// The factorized matrix, if any.
+    #[must_use]
+    pub fn matrix(&self) -> Option<&CscMatrix> {
+        self.matrix.as_ref()
+    }
+
+    /// Values of the factorized matrix in CSC order, to be changed before
+    /// [`refactor`](Self::refactor). The sparsity pattern cannot change.
+    pub fn values_mut(&mut self) -> Option<&mut [f64]> {
+        self.matrix.as_mut().map(CscMatrix::values_mut)
+    }
+
+    /// Factorize the current values with the pivot order of the last
+    /// [`factorize`](Self::factorize). A failure releases the factorization.
+    ///
+    /// # Errors
+    /// Returns an error if not factorized or KLU reports a failure.
+    pub fn refactor(&mut self, common: &mut KluCommon) -> Result<(), KluError> {
+        if self.numeric.is_null() {
+            return Err(KluError::NotFactorized);
+        }
+        let matrix = self.matrix.as_ref().ok_or(KluError::NotFactorized)?;
+        // KLU reads the matrix without modifying it.
+        let (ap, ai, ax) = matrix.raw_parts();
+        let ok = unsafe {
+            klu_l_refactor(
+                ap.cast_mut(),
+                ai.cast_mut(),
+                ax.cast_mut(),
+                self.symbolic,
+                self.numeric,
+                common.as_mut_ptr(),
+            )
+        };
+        if ok != 0 {
+            Ok(())
+        } else {
+            self.clear();
+            Err(KluError::KluStatus {
+                operation: "refactorization",
+                code: common.options().status,
+            })
+        }
+    }
+
+    /// Cheap reciprocal condition estimate, min |diag(U)| / max |diag(U)|.
+    ///
+    /// # Errors
+    /// Returns an error if not factorized or KLU reports a failure.
+    pub fn rcond(&mut self, common: &mut KluCommon) -> Result<f64, KluError> {
+        if self.numeric.is_null() {
+            return Err(KluError::NotFactorized);
+        }
+        if unsafe { klu_l_rcond(self.symbolic, self.numeric, common.as_mut_ptr()) } != 0 {
+            Ok(common.options().rcond)
+        } else {
+            Err(KluError::KluStatus {
+                operation: "condition estimate",
+                code: common.options().status,
+            })
+        }
     }
 
     /// Solve Ax = b into `solution`; `rhs` is not modified.
