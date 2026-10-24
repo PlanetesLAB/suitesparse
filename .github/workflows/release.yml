@@ -1,54 +1,32 @@
-name: Release
+name: release
 
 on:
   push:
-    tags:
-      - "suitesparse-sys-v[0-9]+.[0-9]+.[0-9]+"
-      - "suitesparse-v[0-9]+.[0-9]+.[0-9]+"
+    branches: [main]
+  pull_request:
 
 permissions:
   contents: write
 
 jobs:
-  release:
-    name: Test & Create Release
-    runs-on: ubuntu-latest
+  suitesparse:
+    uses: PlanetesLAB/release-workflows/.github/workflows/release.yml@v1
+    with:
+      manifest: suitesparse/Cargo.toml
+      tag-prefix: suitesparse-v
+      submodules: true
+      apt-packages: "libclang-dev cmake gfortran libblas-dev liblapack-dev libopenblas-dev libmpfr-dev libgomp1"
+      test-command: cargo test --workspace --all-features
+    secrets:
+      DEPS_TOKEN: ${{ secrets.DEPS_TOKEN }}
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libblas-dev \
-            liblapack-dev \
-            libopenblas-dev \
-            libmpfr-dev \
-            libgomp1 \
-            libclang-dev \
-            cmake
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Cargo
-        uses: Swatinem/rust-cache@v2
-
-      - name: Test suitesparse-sys
-        if: startsWith(github.ref_name, 'suitesparse-sys-v')
-        run: cargo test -p suitesparse-sys --all-features
-
-      - name: Test suitesparse
-        if: startsWith(github.ref_name, 'suitesparse-v')
-        run: cargo test -p suitesparse --all-features
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
+  suitesparse-sys:
+    uses: PlanetesLAB/release-workflows/.github/workflows/release.yml@v1
+    with:
+      manifest: suitesparse-sys/Cargo.toml
+      tag-prefix: suitesparse-sys-v
+      submodules: true
+      apt-packages: "libclang-dev cmake gfortran libblas-dev liblapack-dev libopenblas-dev libmpfr-dev libgomp1"
+      test-command: cargo test --workspace --all-features
+    secrets:
+      DEPS_TOKEN: ${{ secrets.DEPS_TOKEN }}
