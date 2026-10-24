@@ -270,6 +270,10 @@ fn generate_bindings(suitesparse: &Library) -> Result<(), String> {
         // not part of the SuiteSparse API.  On some targets bindgen emits
         // signatures which trigger Rust's runtime-symbol-definition lint.
         .blocklist_function("bcmp")
+        .blocklist_function("calloc")
+        .blocklist_function("free")
+        .blocklist_function("malloc")
+        .blocklist_function("realloc")
         .blocklist_function("memcmp")
         .blocklist_function("memcpy")
         .blocklist_function("memmove")
