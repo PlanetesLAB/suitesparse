@@ -1,6 +1,6 @@
 [package]
 name = "suitesparse-sys"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 description = "sys crate for suitesparse library"
 license = "MIT"
@@ -48,9 +48,9 @@ exclude = [
 [dependencies]
 
 [build-dependencies]
-bindgen = "0.72.1"
+bindgen = "0.73.2"
 cmake = "0.1.58"
-pkg-config = "0.3.33"
+pkg-config = "0.3.34"
 
 [features]
 default = ["klu", "amd", "colamd", "btf"]
