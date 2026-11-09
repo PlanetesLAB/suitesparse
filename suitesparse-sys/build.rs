@@ -225,7 +225,9 @@ fn build_vendor() -> Library {
         .define("BUILD_SHARED_LIBS", shared_libraries)
         .define("SUITESPARSE_ENABLE_PROJECTS", build_libraries.join(";"))
         .define("SUITESPARSE_DEMOS", "OFF")
-        .define("SUITESPARSE_CONFIG_USE_OPENMP", feature!("openmp"));
+        .define("SUITESPARSE_CONFIG_USE_OPENMP", feature!("openmp"))
+        // Static libraries built with CUDA need the CUDA runtime at link time.
+        .define("SUITESPARSE_USE_CUDA", "OFF");
 
     let dst = config.build();
     let dst_disp = dst.display();
